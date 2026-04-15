@@ -199,3 +199,28 @@ echo "NytPassword123!" | sudo docker secret create mysql_password -
 # Redeploy så containers bruger det nye secret
 sudo docker stack deploy -c /mnt/c/DCFMC/stack.yaml minecraft
  
+
+# PIPELINE
+    Hver gang du pusher kode til main branchen bygger GitHub Actions automatisk
+    alle 4 Docker images og pusher dem til Docker Hub. 
+
+Flow:
+    1. Du ændrer kode lokalt
+    2. git add . && git commit -m "besked" && git push
+    3. GitHub Actions starter automatisk
+    4. Alle 4 images bygges og pushes til Docker Hub
+    5. Du opdaterer stacken på serveren med:
+       sudo docker service update --force minecraft_minecraft
+
+Secrets der skal være sat på GitHub:
+    DOCKER_USERNAME = leanderfn
+    DOCKER_TOKEN    = Docker Hub access token (Read & Write)
+    Sættes under: Settings -> Secrets and variables -> Actions
+
+Se om pipelinen kørte korrekt:
+    github.com/LeanderNielsen/DCFMC -> Actions fanen
+
+Hvornår skal du manuelt opdatere stacken på serveren?
+    Pipelinen pusher kun images til Docker Hub — den deployer ikke automatisk
+    til serveren. Efter et vellykket build skal du køre:
+    sudo docker stack deploy -c /mnt/c/DCFMC/stack.yaml minecraft
