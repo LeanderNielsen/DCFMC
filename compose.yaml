@@ -17,7 +17,7 @@ services:
   minecraft:
     build:
       context: .
-      dockerfile: ./Dockerfile2.txt
+      dockerfile: ./Dockerfile.minecraft
     container_name: minecraft_server
     stop_grace_period: 1m   # Giver serveren tid til at gemme og lukke ned ordentligt
     stop_signal: SIGINT      # Minecraft håndterer SIGINT i stedet for default SIGTERM (sigterm svarer til kill og sigint svarer til stop)
