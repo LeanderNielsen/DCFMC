@@ -1,4 +1,3 @@
-Leander har været her >_< !
 MINECRAFT SERVER — DOCKER SWARM SETUP
 
 Et containeriseret Minecraft Java Edition server med DMZ arkitektur, Nginx
