@@ -114,13 +114,13 @@ FØRSTE GANG OPSÆTNING
 
 WHITELIST ADMINISTRATION
 Tilføj spiller:
-   sudo docker exec -it $(sudo docker ps | grep minecraft_mariadb | awk '{print $1}') mariadb -h 127.0.0.1 -u mcuser -pFievguys123! minecraft -e "INSERT INTO whitelist (username) VALUES ('SpillerNavn');"
+   sudo docker exec -it $(sudo docker ps | grep minecraft_mariadb | awk '{print $1}') mariadb -h 127.0.0.1 -u mcuser -pPassword123! minecraft -e "INSERT INTO whitelist (username) VALUES ('SpillerNavn');"
  
 Vis alle spillere:
-   sudo docker exec -it $(sudo docker ps | grep minecraft_mariadb | awk '{print $1}') mariadb -h 127.0.0.1 -u mcuser -pFievguys123! minecraft -e "SELECT * FROM whitelist;"
+   sudo docker exec -it $(sudo docker ps | grep minecraft_mariadb | awk '{print $1}') mariadb -h 127.0.0.1 -u mcuser -pPassword123! minecraft -e "SELECT * FROM whitelist;"
  
 Fjern spiller:
-   sudo docker exec -it $(sudo docker ps | grep minecraft_mariadb | awk '{print $1}') mariadb -h 127.0.0.1 -u mcuser -pFievguys123! minecraft -e "DELETE FROM whitelist WHERE username='SpillerNavn';"
+   sudo docker exec -it $(sudo docker ps | grep minecraft_mariadb | awk '{print $1}') mariadb -h 127.0.0.1 -u mcuser -pPassword123! minecraft -e "DELETE FROM whitelist WHERE username='SpillerNavn';"
  
 Ændringer synkroniseres automatisk til Minecraft inden for 60 sekunder.
 
@@ -185,9 +185,9 @@ sudo docker service scale minecraft_nginx=1
 
 
 OPSÆT SECRETS
-echo "Skibidi123!" | sudo docker secret create mysql_root_password -
-echo "Fievguys123!" | sudo docker secret create mysql_password -
-echo "Fiveguys123!" | sudo docker secret create rcon_password -
+echo "Password123!" | sudo docker secret create mysql_root_password -
+echo "Password123!" | sudo docker secret create mysql_password -
+echo "Password123!" | sudo docker secret create rcon_password -
 
 HVIS PASSWORD ER FORGOR eksempel
 
