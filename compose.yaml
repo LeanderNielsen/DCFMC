@@ -1,0 +1,73 @@
+services:
+  # DMZ - Nginx proxyer TCP trafik fra internettet videre til Minecraft internt
+  nginx:
+    build:
+      context: .
+      dockerfile: ./Dockerfile.nginx  # Custom nginx image med stream modulet bagt ind
+    ports:
+      - "25565:25565"       
+    networks:
+      - dmz                   # Eksponeret mod internettet
+      - internal              # Kommunikation med Minecraft serveren
+    depends_on:
+      - minecraft             # Nginx starter ikke før Minecraft er klar
+    restart: unless-stopped   # Auto restart ved crash
+
+  
+  minecraft:
+    build:
+      context: .
+      dockerfile: ./Dockerfile2.txt
+    container_name: minecraft_server
+    stop_grace_period: 1m   # Giver serveren tid til at gemme og lukke ned ordentligt
+    stop_signal: SIGINT      # Minecraft håndterer SIGINT i stedet for default SIGTERM (sigterm svarer til kill og sigint svarer til stop)
+    expose:
+      - "25565"               # Synlig internt men ikke udadtil
+    volumes:
+      - minecraft-world:/minecraft/world # Persistens. World data overlever container genstart
+      - minecraft-logs:/minecraft/logs   # Det samme med logs
+      - ./server.properties:/minecraft/server.properties # Mount server.properties for nem konfiguration uden at skulle rebuild
+    networks:
+      - internal              # Kun intern adgang
+    restart: unless-stopped
+
+  mariadb:
+    build:
+      context: .
+      dockerfile: ./Dockerfile.mariadb
+    container_name: minecraft_db
+    environment:
+      MYSQL_ROOT_PASSWORD: Skibidi123!
+      MYSQL_DATABASE: minecraft
+      MYSQL_USER: mcuser
+      MYSQL_PASSWORD: Fievguys123!
+    volumes:
+      - db_data:/var/lib/mysql 
+      - ./init.sql:/docker-entrypoint-initdb.d/init.sql  # Kører automatisk ved første opstart
+    networks:
+      - internal              # Kun intern adgang
+    restart: unless-stopped
+
+  whitelist-sync:
+    build:
+      context: .
+      dockerfile: Dockerfile.python
+    networks:
+      - internal
+    depends_on:
+      - minecraft
+      - mariadb
+    restart: unless-stopped
+
+# DMZ netværk - semi-trusted, mod internettet
+# Internal netværk - trusted. Minecraft kan dog kommunikere direkte ud. Men der er ingen direkte adgang
+networks:
+  dmz:
+    driver: bridge
+  internal:
+    driver: bridge
+volumes:
+  minecraft-world:
+  minecraft-logs:
+  minecraft-config:
+  db_data:

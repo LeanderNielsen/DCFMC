@@ -1,0 +1,87 @@
+version: '3.8'
+
+services:
+  # DMZ - Nginx proxyer TCP trafik fra internettet videre til Minecraft internt
+  nginx:
+    image: leanderfn/nginx-mc:latest
+    ports:
+      - "25565:25565"       # Eksponeret mod internettet
+    networks:
+      - dmz                 # Eksponeret mod internettet
+      - internal            # Kommunikation med Minecraft serveren
+    depends_on:
+      - minecraft           # Nginx starter ikke før Minecraft er klar
+    deploy:
+      replicas: 1
+      restart_policy:
+        condition: on-failure  # Genstart automatisk ved crash
+
+  minecraft:
+    image: leanderfn/minecraft:latest
+    expose:
+      - "25565"             # Synlig internt men ikke udadtil
+    volumes:
+      - minecraft-world:/minecraft/world  # Persistens. World data overlever container genstart
+      - minecraft-logs:/minecraft/logs    # Det samme med logs
+    networks:
+      - dmz
+      - internal            # Kommunikation med MariaDB og whitelist-sync
+    secrets:
+      - rcon_password
+    deploy:
+      replicas: 1
+      restart_policy:
+        condition: on-failure
+
+  mariadb:
+    image: leanderfn/mariadb-mc:latest
+    environment:
+      MYSQL_ROOT_PASSWORD_FILE: /run/secrets/mysql_root_password
+      MYSQL_DATABASE: minecraft
+      MYSQL_USER: mcuser
+      MYSQL_PASSWORD_FILE: /run/secrets/mysql_password
+    volumes:
+      - db_data:/var/lib/mysql  # Persistens for database data
+      - /mnt/c/DCFMC/init.sql:/docker-entrypoint-initdb.d/init.sql
+    networks:
+      - internal            # Kun intern adgang — aldrig eksponeret mod internettet
+    secrets:
+      - mysql_root_password
+      - mysql_password
+    deploy:
+      replicas: 1
+      restart_policy:
+        condition: on-failure
+
+  whitelist-sync:
+    image: leanderfn/whitelist-sync:latest
+    networks:
+      - internal            # Kun intern adgang — kommunikerer med Minecraft og MariaDB
+    secrets:
+      - mysql_password
+      - rcon_password
+    deploy:
+      replicas: 1
+      restart_policy:
+        condition: on-failure
+
+# DMZ netværk - eksponeret mod internettet via Nginx
+# Internal netværk - trusted, aldrig direkte eksponeret
+networks:
+  dmz:
+    driver: overlay        
+  internal:
+    driver: overlay       
+
+volumes:
+  minecraft-world:
+  minecraft-logs:
+  db_data:
+
+secrets:
+  mysql_root_password:
+    external: true
+  mysql_password:
+    external: true
+  rcon_password:
+    external: true

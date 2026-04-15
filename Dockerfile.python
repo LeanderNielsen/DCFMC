@@ -1,0 +1,16 @@
+FROM python:3.12-alpine
+
+# Opdater pakker
+RUN apk update && apk upgrade && rm -rf /var/cache/apk/*
+
+# mysql-connector-python er eneste eksterne dependency
+RUN pip install --upgrade pip mysql-connector-python
+
+WORKDIR /app
+
+# Kopierer vores egne scripts ind i imaget
+COPY rcon.py .
+COPY whitelist_sync.py .
+
+# Start synkroniseringsscriptet når containeren starter
+CMD ["python3", "whitelist_sync.py"]

@@ -1,0 +1,33 @@
+FROM alpine:3.23
+
+WORKDIR /minecraft
+
+# Opdater pakker
+RUN apk update && apk upgrade && rm -rf /var/cache/apk/*
+
+#Installerer Java 25 uden GUI og wget
+RUN apk add --no-cache openjdk25-jre-headless wget
+
+
+# Hent Minecraft server jar og accepter EULA og sletter wget efter vi er done med det
+RUN wget -O server.jar https://piston-data.mojang.com/v1/objects/97ccd4c0ed3f81bbb7bfacddd1090b0c56f9bc51/server.jar \
+    && echo "eula=true" > eula.txt \
+    && apk del wget \
+    && rm -rf /var/cache/apk/*
+
+# Bag server.properties ind i image
+COPY server.properties /minecraft/server.properties
+
+
+# Laver en non root user og lader den have ejerskab over mappen.
+RUN adduser -D -u 1000 mcuser \
+    && mkdir -p /minecraft/logs /minecraft/world \
+    && chown -R mcuser:mcuser /minecraft 
+USER mcuser
+
+#Blød shutdown, hvilket lader serveren gemme ordentligt når / hvis contaienr dræbes
+STOPSIGNAL SIGINT 
+
+
+# Starter serveren uden gui. Server starter m 2 GB ram men kan trække op til 6 GB
+CMD ["java", "-Xmx6G", "-Xms2G", "-jar", "server.jar", "nogui"]

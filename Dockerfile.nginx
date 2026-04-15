@@ -1,0 +1,14 @@
+FROM nginx:alpine
+
+#Opdaterer alle pakker
+RUN apk update && apk upgrade && rm -rf /var/cache/apk/*
+
+# Bager nginx.conf ind i imaget så vi slipper for manuelle filer på serveren
+COPY nginx.conf /etc/nginx/nginx.conf
+
+# Lav writable directories
+RUN mkdir -p /run /var/cache/nginx \
+    && chown -R nginx:nginx /run /var/cache/nginx /etc/nginx/conf.d
+
+# Skift til non-root bruger
+USER nginx
